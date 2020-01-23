@@ -7,7 +7,7 @@ description:
 
 # Лекцүүд
 
-[Лекц 2: Магадлалын онолын мэдлэгээ бататгах](pages/slide1-probability.html)
+[Лекц 2: Магадлалын онолын мэдлэгээ бататгах](pages/slides1-probability.html)
 
 # Сурах бичиг
 
