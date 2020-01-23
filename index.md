@@ -1,12 +1,13 @@
 ---
 layout: page
-title: ECN225
+title: Эконометрик 1
 tagline: Багш Д. Хашбаатар
 description: 
 ---
 
 # Лекцүүд
 
+[Лекц 2: ]()
 
 # Сурах бичиг
 
