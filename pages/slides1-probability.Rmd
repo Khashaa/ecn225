@@ -1,0 +1,967 @@
+---
+title: "Лекц 2: Магадлалын онол"
+subtitle: "Эконометрикс I<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: "багш: Д. Хашбаатар"
+date: "2020/01/24"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{R, setup, include = F}
+options(htmltools.dir.version = FALSE)
+library(pacman)
+p_load(
+  broom, here, tidyverse,
+  ggplot2, ggthemes, hrbrthemes,ggforce, ggridges,
+  latex2exp, viridis, extrafont, gridExtra,
+  kableExtra, snakecase, janitor,
+  data.table, dplyr, estimatr,
+  lubridate, knitr, parallel,
+  lfe,
+  here, magrittr
+)
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+# Dark slate grey: #314f4f
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  warning = F,
+  message = F
+)
+opts_chunk$set(dev = "svg")
+options(device = function(file, width, height) {
+  svg(tempfile(), width = width, height = height)
+})
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -0.5, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 18, family = "STIXGeneral"),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_math <- theme_void() + theme(
+  text = element_text(family = "MathJax_Math"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes_serif <- theme_void() + theme(
+  text = element_text(family = "MathJax_Main"),
+  axis.title = element_text(size = 22),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = "grey70",
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_axes <- theme_void() + theme(
+  text = element_text(family = "Fira Sans Book"),
+  axis.title = element_text(size = 18),
+  axis.title.x = element_text(hjust = .95, margin = margin(0.15, 0, 0, 0, unit = "lines")),
+  axis.title.y = element_text(vjust = .95, margin = margin(0, 0.15, 0, 0, unit = "lines")),
+  axis.line = element_line(
+    color = grey_light,
+    size = 0.25,
+    arrow = arrow(angle = 30, length = unit(0.15, "inches")
+  )),
+  plot.margin = structure(c(1, 0, 1, 0), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_set(theme_gray(base_size = 20))
+```
+
+```{R, colors, include = F}
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#2b59c3"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+```
+
+layout: false
+class: inverse, middle
+
+# Магадлалын онол
+## Санамсаргүй хувьсагч ба түүний магадлалын тархалт
+---
+# Магадлалын онол
+
+## Санамсаргүй хувьсагч ба түүний магадлалын тархалт
+
+$X$ хувьсагчийн авах .pink[боломжит утгууд] $\mathcal{\color{#e64173}X}$ болон түүнд .purple[харгалзах магадлалууд] $\color{#6A5ACD}P$ өгөгдсөн бол $X$-ийг .hi-pink[санамсаргүй хувьсагч] (random variable) гэдэг<sup>†</sup>. 
+
+--
+
+.pink[Жишээ]: Шоог нэг удаа хаяхад буух нүдний тоо $X$ санамсаргүй хувьсагч юм: 
+
+- боломжит утгууд $\mathcal{X}=\{1,2,3,4,5,6\}$, 
+- харгалзах магадлалууд $P=\{\frac{1}{6},\frac{1}{6},\frac{1}{6},\frac{1}{6},\frac{1}{6},\frac{1}{6}\}$.
+
+.footnote[
+[†]: Цаашид с.x гэж товчлон бичнэ.]
+
+---
+# Магадлалын онол
+## Дискрет санамсаргүй хувьсагч
+
+$X$ хувьсагчийн авах боломжит утгууд тоологдом бол .hi-pink[дискрет санамсаргүй хувьсагч] гэнэ.
+$\mathcal{X}=\{x_1,x_2,\ldots\}$, $P=\{p_1,p_2,\ldots\}$
+
+ - $P(X=x_i)=p_i,$ 
+ - $\sum_{i}p_i=1$
+
+--
+
+## Нягтын функц 
+
+$P(X=x)=f(x)$ байх $f$ функцийг .hi-purple[магадлалын нягтын функц] (probability density function - pdf) гэнэ.
+
+---
+# Магадлалын онол
+ 
+```{r, fig.height = 4, fig.width=5}
+x <- 1:6
+p <- rep(1/6, 6)
+plot(x, p, type = "h", col="#20B2AA", lwd=2, 
+     main = "магадлалын нягтын функц",
+     xlab = "боломжит утгууд",
+     ylab = "магадлал")
+```
+
+ 
+
+---
+# Магадлалын онол
+
+.hi[Асуулт]: Шоо хаяхад буух нүд 4-өөс ихгүй байх магадлал?
+
+.hi[Хариулт]: `P(X<=4) = P(X=1) + P(X=2) + P(X=3) + P(4) = 4/6`
+
+--
+
+.hi[Асуулт]: Шоо хаяхад буух нүд 2-оос их байх магадлал?
+
+.hi[Хариулт]: `P(2<X) = P(X=2) + P(X=3) + P(X=4) + P(X=5) + P(X=6)=5/6`
+`P(X>2)=1-P(X<=2)`
+
+--
+
+.hi[Асуулт]: Шоо хаяхад буух нүд 2-оос их, 4-өөс ихгүй байх магадлал?
+
+.hi[Хариулт]: `P(2<X<=4) = P(X<=4)-P(X<=2)=5/6`
+
+
+---
+# Магадлалын онол
+
+.hi-purple[Хуримтлагдсан тархалтын функц] $$F(x) = P(X\leq x)=\sum_{x_i\leq x} f(x_i)$$ 
+
+--
+
+$$P(a< X\leq b)=F(b)-F(a)$$
+
+--
+
+```{r, fig.height = 3.5, fig.width=5, echo=FALSE}
+x <- 1:6
+p <- rep(1/6, 6)
+plot(x, cumsum(p), type = "h", col="#20B2AA", lwd=2, 
+     main = "Хуримтлагдсан тархалтын функц",
+     xlab = "боломжит утгууд",
+     ylab = "магадлал")
+```
+---
+# Магадлалын онол
+
+.pink[Жишээ]. 2 шоо хаяхад буух нүднүүдийн нийлбэрийн дунджын тархалт ямар байх вэ?
+$$X=\frac{X_1 + X_2}{2}$$
+ - $X_1$, $X_2$ аваx утгууд тус бүр $\{1,2,3,4,5,6\}$
+ - $X$ аваx утгууд $\{2/2,3/2,\ldots,12/2\}$
+ 
+--
+
+```{r, echo=FALSE, fig.height=3.5}
+expand.grid(x1=1:6, x2=1:6) %>% 
+  mutate(x = (x1 + x2)/2) %>% 
+  group_by(x) %>% 
+  summarise(n=n()/36) %>% 
+  ggplot(aes(x=x, y=n)) + geom_bar(stat = "identity", width=0.1, fill="#20B2AA") +
+  theme_ipsum() + ylab("n=2")+
+  scale_x_continuous(breaks = 1:6)
+```
+
+---
+# Магадлалын онол
+
+.pink[Жишээ]. 3 шоо хаяхад буух нүднүүдийн нийлбэрийн тархалт ямар байх вэ?
+$$X=\frac{X_1 + X_2+X_3}{3}$$
+ - $X_1$, $X_2$, $X_3$ аваx утгууд тус бүр $\{1,2,3,4,5,6\}$
+ - $X$ аваx утгууд $\{3/3,4/3,\ldots,18/3\}$
+ 
+
+```{r, echo=FALSE, fig.height=3.5}
+expand.grid(x1=1:6, x2=1:6, x3=1:6) %>% 
+  mutate(x = (x1 + x2+x3)/3) %>% 
+  group_by(x) %>% 
+  summarise(n=n()/(6^3)) %>% 
+  ggplot(aes(x=x, y=n)) + geom_bar(stat = "identity", width=0.1, fill="#20B2AA") +
+  theme_ipsum() + ylab("n=3")+
+  scale_x_continuous(breaks = 1:6)
+```
+
+---
+# Магадлалын онол
+
+.pink[Жишээ]. 4 шоо хаяхад буух нүднүүдийн нийлбэрийн тархалт ямар байх вэ?
+$$X=\frac{X_1 + X_2+X_3+X_4}{5}$$
+ - $X_1$, $X_2$, $X_3$, $X_4$ аваx утгууд тус бүр $\{1,2,3,4,5,6\}$
+ - $X$ аваx утгууд $\{4/4,5/4,\ldots,24/4\}$
+ 
+
+```{r, echo=FALSE, fig.height=3.5}
+expand.grid(x1=1:6, x2=1:6, x3=1:6, x4=1:6) %>% 
+  mutate(x = (x1 + x2+x3+x4)/4) %>% 
+  group_by(x) %>% 
+  summarise(n=n()/(6^4)) %>% 
+  ggplot(aes(x=x, y=n)) + geom_bar(stat = "identity", width=0.1, fill="#20B2AA") +
+  theme_ipsum() + ylab("n=4")+
+  scale_x_continuous(breaks = 1:6)
+```
+---
+# Магадлалын онол
+
+.pink[Жишээ]. 5 шоо хаяхад буух нүднүүдийн нийлбэрийн тархалт ямар байх вэ?
+$$X=\frac{X_1 + X_2+X_3+X_4+X_5}{5}$$
+ - $X_1$, $X_2$, $X_3$, $X_4$, $X_5$ аваx утгууд тус бүр $\{1,2,3,4,5,6\}$
+ - $X$ аваx утгууд $\{5/5,6/5,\ldots,30/5\}$
+ 
+
+```{r, echo=FALSE, fig.height=3.5}
+expand.grid(x1=1:6, x2=1:6, x3=1:6, x4=1:6, x5=1:6) %>% 
+  mutate(x = (x1 + x2+x3+x4+x5)/5) %>% 
+  group_by(x) %>% 
+  summarise(n=n()/(6^5)) %>% 
+  ggplot(aes(x=x, y=n)) + geom_bar(stat = "identity", width=0.1, fill="#20B2AA") +
+  theme_ipsum() + ylab("n=5")+
+  scale_x_continuous(breaks = 1:6)
+```
+---
+# Магадлалын онол
+## Тасралтгүй санамсаргүй хувьсагч
+
+$X$ хувьсагч $[a,b]$ засварт ажиглагдах магадлал 
+
+$$P(a< X\leq b)=\int_a^b f(x)dx$$
+бол X-г .pink[тасралтгүй с.x] гэнэ.
+
+--
+
+.hi-purple[Хуримтлагдсан тархалтын функц] $$F(x) = P(X\leq x)=\int_{-\infty}^x f(u)du$$
+
+---
+# Стандарт нормаль тархалт
+
+
+$$f(x)=\frac{1}{\sqrt{2\pi}}\exp(-\frac{x^2}{2})$$
+
+X стандарт нормаль тархалттай ( $X\sim N(0,1)$ гэж тэмдэглэнэ) бол [-1.96, 1.96]  завсарт ажиглагдах магадлал: $\mathop{\text{P}}\left(-1.96 \leq X \leq 1.96\right) = 0.95$
+```{R, example: pdf, echo = F, dev = "svg", fig.height = 3.5}
+
+# Generate data for density's polygon
+tmp <- tibble(x = seq(-4, 4, 0.01), y = dnorm(x))
+tmp <- rbind(tmp, tibble(x = seq(4, -4, -0.01), y = 0))
+# Plot it
+ggplot(data = tmp, aes(x, y)) +
+geom_polygon(fill = "grey85") +
+geom_polygon(data = tmp %>% filter(between(x, -1.96, 1.96)), fill = red_pink) +
+geom_hline(yintercept = 0, color = "black") +
+theme_ipsum() + ylab("f(x)")
+```
+
+`dnorm` функцыг ашиглана  
+
+
+---
+# Стандарт нормаль тархалт
+
+Хуримтлагдсан тархалтын функц
+$$F(x)=\int_{-\infty}^x\frac{1}{\sqrt{2\pi}}\exp(-\frac{u^2}{2})du$$
+
+
+```{R, example: cdf, echo = F, dev = "svg", fig.height = 3.5}
+
+# Generate data for density's polygon
+tmp <- tibble(x = seq(-4, 4, 0.01), y = pnorm(x))
+tmp <- rbind(tmp, tibble(x = seq(4, -4, -0.01), y = 0))
+# Plot it
+ggplot(data = tmp, aes(x, y)) +
+geom_polygon(fill = "grey85") +
+geom_polygon(data = tmp %>% filter(between(x, -Inf, 1.96)), fill = red_pink) +
+geom_hline(yintercept = 0, color = "black") +
+theme_ipsum() + ylab("F(x)")
+```
+`pnorm` функцыг ашиглана 
+
+---
+# Жигд тархалт (Uniform Distribution)
+
+$X$ нь $[a, b]$ завсар дээр жигд тархалттай бол
+
+$$f(x)=\frac{1}{b-a}$$
+
+--
+Uniform[0,1] хувьсагчийн нягтын функц
+```{R, echo = F, dev = "svg", fig.height = 3.5}
+
+# Generate data for density's polygon
+d2 <- tibble(x = seq(-1, 2, 0.01), y = dunif(x, min = 0, max = 1)) %>%
+  rbind(., tibble(x = seq(2, -1, -0.01), y = 0))
+# Plot them
+ggplot() +
+geom_polygon(data = d2, aes(x, y), fill = red_pink) +
+geom_hline(yintercept = 0, color = "black") +
+#geom_vline(xintercept = 0, size = 1, linetype = "dashed") +
+#scale_x_continuous(breaks = 0, labels = TeX("$\\beta$")) +
+theme_ipsum() +ylab("f(x)")+
+theme(axis.text.x = element_text(size = 10))
+```
+---
+layout: false
+class: inverse, middle
+
+# Магадлалын онол
+## Санамсаргүй хэмжигдэхүүний хүлээгдсэн утга болон вариац
+
+---
+# Хүлээгдсэн утга, вариац
+Тархалтын функцын нягтаас хамааран тархалтын голлох утгууд тодорхойлогдоно.
+
+```{r,echo = F, dev = "svg", fig.height = 3.5}
+# Generate data for densities' polygons
+d1 <- tibble(x = seq(-7.5, 7.5, 0.01), y = dnorm(x, mean = 1, sd = 1)) %>%
+  rbind(., tibble(x = seq(7.5, -7.5, -0.01), y = 0))
+d2 <- tibble(x = seq(-7.5, 7.5, 0.01), y = dunif(x, min = -2.5, max = 1.5)) %>%
+  rbind(., tibble(x = seq(7.5, -7.5, -0.01), y = 0))
+d3 <- tibble(x = seq(-7.5, 7.5, 0.01), y = dnorm(x, mean = 0, sd = 2.5)) %>%
+  rbind(., tibble(x = seq(7.5, -7.5, -0.01), y = 0))
+# Plot them
+ggplot() +
+geom_polygon(data = d1, aes(x, y), alpha = 0.8, fill = "orange") +
+geom_polygon(data = d2, aes(x, y), alpha = 0.65, fill = red_pink) +
+geom_polygon(data = d3, aes(x, y), alpha = 0.6, fill = "darkslategray") +
+geom_hline(yintercept = 0, color = "black") +
+#geom_vline(xintercept = 0, size = 1, linetype = "dashed") +
+#scale_x_continuous(breaks = 0, labels = TeX("$\\beta$")) +
+theme_ipsum() +ylab("f(x)")+
+theme(axis.text.x = element_text(size = 10))
+```
+
+ - Хаана төвлөрч буй: .hi-pink[Хүлээгдсэн утга, дундаж (expected value, mean)]
+ - Төвлөрөл хир их: .hi-purple[вариац (variance)]
+
+---
+# Хүлээгдсэн утга
+
+$X$ санамсаргүй хэмжигдэхүүний бүх боломжит утгын жигнэсэн дундажийг .hi-pink[хүлээгдсэн утга] гээд $\mathrm{E}(X)$, $\mu$ гэж тэмдэглэдэг.
+
+Дискрет бол
+$$\mathrm{E}(X)=\sum_{x}{x}f(x)$$
+Тасралтгүй бол
+$$\mathrm{E}(X)=\int_{-\infty}^\infty{x}f(x)dx$$
+--
+
+$\phi(X)$ хувьд мөн адилаар
+
+$$\mathrm{E}(\phi(X))=\sum_{x}{\phi(x)}f(x)$$
+---
+# Хүлээгдсэн утга
+
+Дараах чанаруудыг хангана
+ 1. $c$ тогтмол тоо бол $\mathrm{E}(c)=c$
+ 2. $\mathrm{E}(a+bX)=a+b\mathrm{E}(X)$
+ 3. $\mathrm{E}(X+Y)=\mathrm{E}(X+Y)$
+ 
+--
+
+Жишээ: 1 шоо  хаяхад буух нүдний тооны хүлээгдсэн утга
+$$E(X_1)=(1+2+3+4+5+6)/6=7/2$$
+
+2 шоо хаяхад буух нүднүүдийн нийлбэрийн дунджын хүлээгдсэн утга
+$$E(X)=E(\frac{X_1 + X_2}{2})=\frac{1}{2}(E(X_1)+E(X_2))=7/2$$
+---
+# Вариац
+
+$X$ хувьсагч дундажаасаа хир их хазайлттай буйг хэмжих $X-\mathrm{E}(X)=X-\mu$-г авч үзье.
+$E(X-\mu)=E(X)-\mu=0$ учир $(X-\mu)^2$-г хэмжүүр болговол зохилтой. 
+
+$$\color{"#6A5ACD"}{\mathrm{Var}(X)}=\mathrm{E}[(X-\mu)^2]=\sigma^2$$
+гэж тодорхойлон .hi-purple[вариац] гэж нэрлэдэг
+
+--
+
+Тооцохдоо
+
+$$\sigma^2=\mathrm{E}[X^2-2\mu X+\mu^2]=\mathrm{E}(X^2)-(\mathrm{E}(X))^2$$
+томъёог ашиглавал хялбар.
+
+---
+# Вариац
+
+Жишээ: 1 шоо  хаяхад буух нүдний тоо
+$$E(X_1^2)=(1^2+2^2+3^2+4^2+5^2+6^2)/6=91/6$$
+$$\mathrm{Var}(X_1)=91/6-(7/2)^2=35/12$$
+
+--
+
+2 шоо хаяхад буух нүднүүдийн нийлбэрийн дундаж
+
+$$\mathrm{E}(X^2)=\left(\frac{2}{2}\right)^2\frac{1}{36}+\left(\frac{3}{2}\right)^2\frac{1}{36}+\cdots+\left(\frac{12}{2}\right)^2\frac{1}{36}=\frac{329}{4}$$
+$$\mathrm{Var}(X)=\frac{329}{4}-(7/2)^2=\frac{35}{24}$$
+---
+# Стандарт хазайлт
+
+Хэмжилтийн нэгжийг адилхан байлгах үүднээс стандарт хазайлтыг ашиглана.
+$$\mathrm{sd}(X)=\sqrt{\mathrm{Var}(X)}$$
+
+Дараах чанаруудыг хангана
+ 1. $c$ тогтмол тоо бол $\mathrm{Var}(c)=0$
+ 2. $\mathrm{Var}(a+bX)=b^2\mathrm{Var}(X)$
+ 
+---
+ # Стандартчилах
+ 
+ $X$ санамсаргүй хэмжигдэхүүнийг тэг дундажтай, 1 вариацтай болгон хувиргахыг стандартчилах гэнэ.
+ $$Z=\frac{X-\mathrm{E}(X)}{\mathrm{sd}(X)}\sim (0, 1)$$
+ 
+--
+
+Санамсаргүй хувьсагчдийг хооронд нь харьцуулан, нийлэлт<sup>†</sup> зэрэг бусад шинж чанарыг шинжих үед стандартчилал шаардагддаг. 
+
+.footnote[
+[†]:  Магадлалын онолын хамгийн чухал үр дүн болох төвийн хязгаарын теорем, их тооны хууль зэрэг]
+
+---
+layout: false
+class: inverse, middle
+
+# Магадлалын онол
+## Joint Distributions, Conditional Distributions, and Independence
+
+---
+# Хамтын тархалт
+
+ - $X$, $Y$ дискрет с.x-ын хувьд .hi-purple[хамтын магадлалын нягтын функц] нь $$f_{XY}(x,y)=P(X=x, Y=y).$$
+
+--
+ - $X$, $Y$ тус бүрийн тархалтыг .hi-purple[захын магадлалын тархалт] (marginal probability distribution) гэж нэрлэнэ.
+$$f_X(x)=\sum_{y}f_{XY}(x,y), \quad f_Y(x)=\sum_{x}f_{XY}(x,y)$$
+--
+
+ - $X$, $Y$ын хувьд хамтын магадлал 
+$$f_{XY}(x,y)=f_X(x)f_Y(y)$$ бол $X$, $Y$ .hi-purple[хамааралгүй] хувьсагчид (independent)
+
+---
+# Хамтын тархалт
+
+2 шоо хаяхад буух нүдний хамтын тархалт
+
+
+|   | 1              | 2              | 3              | 4              | 5              | 6              |
+|---|----------------|----------------|----------------|----------------|----------------|----------------|
+| 1 | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ |
+| 2 | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ |
+| 3 | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ |
+| 4 | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ |
+| 5 | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ |
+| 6 | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{1}{36}$ 
+
+---
+# Хамтын тархалт
+
+2 шоо хаяхад буух нүдний ихийг нь $X$, багыг нь $Y$ гэвэл
+
+|   | 1              | 2              | 3              | 4              | 5              | 6              |
+|---|----------------|----------------|----------------|----------------|----------------|----------------|
+| 1 | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ |
+| 2 | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ |
+| 3 | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ |
+| 4 | 0              | 0              | 0              | $\frac{1}{36}$ | $\frac{1}{36}$ | $\frac{2}{36}$ |
+| 5 | 0              | 0              | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ |
+| 6 | 0              | 0              | 0              | 0              | 0              | $\frac{1}{36}$ |
+
+---
+# Заxын тархалт
+
+2 шоо хаяхад буух нүдний ихийг нь $X$, багыг нь $Y$ гэвэл
+
+|   | 1              | 2              | 3              | 4              | 5              | 6              | $\color{#e64173}{f_Y}$           |
+|---|----------------|----------------|----------------|----------------|----------------|----------------|-----------------|
+| 1 | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{11}{36}}$ |
+| 2 | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{9}{36}}$  |
+| 3 | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{7}{36}}$  |
+| 4 | 0              | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{5}{36}}$  |
+| 5 | 0              | 0              | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{3}{36}}$  |
+| 6 | 0              | 0              | 0              | 0              | 0              | $\frac{1}{36}$ | $\color{#e64173}{\frac{1}{36}}$  |
+
+---
+# Заxын тархалт
+
+2 шоо хаяхад буух нүдний ихийг нь $X$, багыг нь $Y$ гэвэл
+
+|   | 1              | 2              | 3              | 4              | 5              | 6              | $\color{#e64173}{f_Y}$           |
+|---|----------------|----------------|----------------|----------------|----------------|----------------|-----------------|
+| 1 | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{11}{36}}$ |
+| 2 | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{9}{36}}$  |
+| 3 | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{7}{36}}$  |
+| 4 | 0              | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{5}{36}}$  |
+| 5 | 0              | 0              | 0              | 0              | $\frac{1}{36}$ | $\frac{2}{36}$ | $\color{#e64173}{\frac{3}{36}}$  |
+| 6 | 0              | 0              | 0              | 0              | 0              | $\frac{1}{36}$ | $\color{#e64173}{\frac{1}{36}}$  |
+| $\color{#6A5ACD}{f_X}$ | $\color{#6A5ACD}{\frac{1}{36}}$ | $\color{#6A5ACD}{\frac{3}{36}}$ | $\color{#6A5ACD}{\frac{5}{36}}$ | $\color{#6A5ACD}{\frac{7}{36}}$ | $\color{#6A5ACD}{\frac{9}{36}}$ | $\color{#6A5ACD}{\frac{11}{36}}$ | 1               |
+
+
+---
+# Ковариац
+
+
+$$\color{#e64173}{\mathrm{Cov}(X,Y)=\mathrm{E}\big[(X-\mathrm{E}(X))(Y-\mathrm{E}(Y))\big]=\mathrm{E}(XY)-\mathrm{E}(X)\mathrm{E}(Y).}$$
+
+--
+Дараах чанаруудыг хангана
+
+ 1. $Cov(X,X)=\mathrm{Var}(X)$
+ 2. $\mathrm{Cov}(a+bX, Y)=b\mathrm{Cov}(X, Y)$
+ 3. $X$, $Y$-independent $\implies$ $\mathrm{Cov}(X, Y)=0$
+
+--
+$$\textrm{Var}(X+Y)=\textrm{Var}(X)+\textrm{Var}(Y)+2\textrm{Cov}(X, Y).$$
+---
+# Корреляци
+
+
+$$\color{#e64173}{\rho_{XY}=\rho(X,Y)=\frac{\textrm{Cov}(X,Y)}{\sqrt{\textrm{Var(X) Var(Y)}}}=\frac{\textrm{Cov}(X,Y)}{\sigma_X \sigma_Y}
+}$$
+
+--
+
+Дараах чанаруудыг хангана
+
+ 1. $−1≤\rho_{XY}≤1$
+ 2. $ρ(aX+b,cY+d)=ρ(X,Y)$
+ 3. $\rho_{XY}=0$ Корреляци хамааралгүй (uncorrelated)
+
+---
+# Нөхцөлт магадлал
+
+conditional probability density function (cpdf)
+
+$$f_{Y|X}(y|x)=\frac{f_{XY}(x, y)}{f_X(x)}$$
+--
+2 шоо хаях жишээнд
+$$f_{Y|X}(y|x=2)=\{\frac{2}{3},\frac{1}{3},0,0,0,0\}$$
+$$f_{Y|X}(y|x=6)=\{\frac{2}{11},\frac{2}{11},\frac{2}{11},\frac{2}{11},\frac{2}{11},\frac{1}{11}\}$$
+
+---
+# Нөхцөлт хүлээгдсэн утга
+
+.hi-pink[Conditional Expectation Function (CEF)]
+$$\color{#e64173}{\mathrm{E}(Y|X)=\sum_yyf_{Y|X}(y|X)}$$
+.small[
+ - $X$-ийн функц байна.
+ 
+
+.hi[Жишээ]: Ажил хийж буй бүх иргэний цалингийн хэмжээ $Y$, суралцсан жил $X$ 
+
+ - $\mathrm{E(Y|X=12)}$ бүрэн дунд боловсролтой иргэдийн дундаж цалингийн хэмжээ
+ - $\mathrm{E(Y|X=16)}$ дээд боловсролтой иргэдийн дундаж цалингийн хэмжээ
+ 
+ $$E(Wage|Educ)=\alpha+\beta Educ$$
+]
+---
+class: clear, center, middle
+name: graphically
+
+$X$-ийн 8, ..., 22 утгууд дээрх $\text{Y}_{i}$ -ийн нөхцөлт тархалт
+
+```{R, data_cef, echo = F, cache = T}
+# Set seed
+set.seed(12345)
+# Sample size
+n <- 1e4
+# Generate extra disturbances
+u <- sample(-2:2, size = 22, replace = T) * 1e3
+# Generate data
+cef_df <- tibble(
+  x = sample(x = seq(8, 22, 1), size = n, replace = T),
+  y = 15000 + 3000 * x  + 1e3 * (x %% 3) + 500 * (x %% 2) + rnorm(n, sd = 1e4) + u[x]
+) %>% mutate(x = round(x)) %>%
+filter(y > 0)
+# Means
+means_df <- cef_df %>% group_by(x) %>% summarize(y = mean(y))
+# The CEF in ggplot
+gg_cef <- ggplot(data = cef_df, aes(x = y, y = x %>% as.factor())) +
+  geom_density_ridges_gradient(
+    aes(fill = ..x..),
+    rel_min_height = 0.003,
+    color = "white",
+    scale = 2.5,
+    size = 0.3
+  ) +
+  scale_x_continuous(
+    "Цалингийн хэмжээ",
+    #labels = scales::dollar
+  ) +
+  ylab("Суралцсан жил") +
+  scale_fill_viridis(option = "D") +
+  theme_pander(base_family = "Fira Sans Book", base_size = 18) +
+  theme(
+    legend.position = "none"
+  ) +
+  coord_flip()
+```
+
+```{R, fig_cef_dist, echo = F, cache = T}
+gg_cef
+```
+---
+class: clear, middle, center
+Нөхцөлт дундажын функц $\mathop{E}\left[ \text{Y}\mid X \right]$ нь эдгээр нөхцөлт тархалтуудын дундажыг илэрхийлсэн функц юм.
+
+```{R, fig_cef, echo = F, cache = T}
+gg_cef +
+  geom_path(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor(), group = 1),
+    color = "white",
+    alpha = 0.85
+  ) +
+  geom_point(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor()),
+    color = "white",
+    shape = 16,
+    size = 3.5
+  )
+```
+
+---
+class: clear, middle, center
+
+$\mathop{E}\left[ \text{Y}_{i}\mid \text{X}_{i} \right]$...
+
+```{R, fig_cef_only, echo = F, cache = T}
+ggplot(data = cef_df, aes(x = y, y = x %>% as.factor())) +
+  geom_density_ridges(
+    rel_min_height = 0.003,
+    color = "grey85",
+    fill = NA,
+    scale = 2.5,
+    size = 0.3
+  ) +
+  scale_x_continuous(
+    "Цалингийн хэмжээ",
+  ) +
+  ylab("Суралцсан жил") +
+  scale_fill_viridis(option = "magma") +
+  theme_pander(base_family = "Fira Sans Book", base_size = 18) +
+  theme(
+    legend.position = "none"
+  ) +
+  geom_path(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor(), group = 1),
+    color = "grey20",
+    alpha = 0.85
+  ) +
+  geom_point(
+    data = means_df,
+    aes(x = y, y = x %>% as.factor()),
+    color = "grey20",
+    shape = 16,
+    size = 3.5
+  ) +
+  coord_flip()
+```
+
+---
+# Нөхцөлт хүлээгдсэн утга
+
+CEF дараахи чанаруудыг хангана.
+
+ 1. $\mathrm{E}(\phi(X)|X)=\phi(X)$
+ 2. $\mathrm{E}[\mathrm{E}(Y|X)]=\mathrm{E}(Y)$
+
+---
+layout: false
+class: inverse, middle
+
+# Магадлалын онол
+## Нормал тархалт болон түүнээс үүсэх тархалтууд
+
+---
+# Нормал тархалт
+
+
+$$X\sim N(\mu,\sigma^2),\quad f(x)=\frac{1}{\sigma\sqrt{2\pi}}\exp\left(-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2\right)$$
+$\color{#e64173}{N(0,0.2)}$, $\color{#20B2AA}{N(0,1)}$, $\color{#fb6107}{N(0,5)}$, $\color{#2b59c3}{N(-2,0.5)}$
+.pull-left[
+
+```{R, pdf1, echo = F, fig.fullwidth = T, dev = "svg"}
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#2b59c3"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+# Generate data for density's polygon
+p9 <- ggplot(data.frame(x = c(-5, 5)), aes(x = x)) +
+        stat_function(fun = dnorm, args = list(0, sqrt(0.2)),
+                      colour = red_pink, size=2) +
+        stat_function(fun = dnorm, args = list(0, 1),
+                      colour = turquoise, size=2) +
+        stat_function(fun = dnorm, args = list(0, sqrt(5)),
+                      colour = red, size=2) +
+        stat_function(fun = dnorm, args = list(-2, sqrt(0.5)),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(-5, 5, 1),
+                              limits=c(-5, 5)) 
+p9 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**PDF**]
+
+]
+
+
+
+.pull-right[
+
+```{R, cdf1, echo = F, fig.fullwidth = T, dev = "svg"}
+p10 <- ggplot(data.frame(x = c(-5, 5)), aes(x = x)) +
+        stat_function(fun = pnorm, args = list(0, sqrt(0.2)),
+                      colour = red_pink, size=2) +
+        stat_function(fun = pnorm, args = list(0, 1),
+                      colour = turquoise, size=2) +
+        stat_function(fun = pnorm, args = list(0, sqrt(5)),
+                      colour = red, size=2) +
+        stat_function(fun = pnorm, args = list(-2, sqrt(0.5)),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(-5, 5, 1),
+                              limits=c(-5, 5)) 
+p10 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**CDF**]
+
+
+]
+
+---
+# Хи квадрат тархалт (Chi-square)
+
+$X_1, X_2,...,X_k\sim \text{iid }N(0,1)$ 
+$$Z=X_1^2+X_2^2+\cdots+X_k^2\sim\chi^2(k)$$
+
+$\color{#e64173}{\chi^2(2)}$, $\color{#20B2AA}{\chi^2(4)}$, $\color{#2b59c3}{\chi^2(8)}$, 
+.pull-left[
+
+```{R, pdf2, echo = F, fig.fullwidth = T, dev = "svg"}
+
+# Generate data for density's polygon
+p9 <- ggplot(data.frame(x = c(0, 15)), aes(x = x)) +
+        stat_function(fun = dchisq, args = list(2),
+                      colour = red_pink, size=2) +
+        stat_function(fun = dchisq, args = list(4),
+                      colour = turquoise, size=2) +
+        stat_function(fun = dchisq, args = list(8),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(0, 15, 1),
+                              limits=c(0, 15)) +
+          scale_y_continuous(breaks = seq(0, 1.5, 0.1),
+                              limits=c(0, 0.5)) + ylim(0,.5)
+p9 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**PDF**]
+
+]
+
+
+
+.pull-right[
+
+```{R, cdf23, echo = F, fig.fullwidth = T, dev = "svg"}
+p9 <- ggplot(data.frame(x = c(0, 8)), aes(x = x)) +
+        stat_function(fun = pchisq, args = list(2),
+                      colour = red_pink, size=2) +
+        stat_function(fun = pchisq, args = list(4),
+                      colour = turquoise, size=2) +
+        stat_function(fun = pchisq, args = list(8),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(0, 8, 1),
+                              limits=c(0, 8)) +
+          scale_y_continuous(breaks = seq(0, 0.5, 0.1),
+                              limits=c(0, 0.5)) + ylim(0,1)
+p9 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**CDF**]
+
+
+]
+
+---
+# t тархалт 
+
+$X \sim N(0,1)$, $Z\sim\chi^2(n)$
+
+$$t=\frac{X}{\sqrt{Z/n}}\sim t(n)$$
+
+$\color{#e64173}{t(1)}$, $\color{#20B2AA}{t(2)}$, $\color{#2b59c3}{t(24)}$, 
+.pull-left[
+
+```{R, pdf3, echo = F, fig.fullwidth = T, dev = "svg"}
+# Generate data for density's polygon
+p9 <- ggplot(data.frame(x = c(-4, 4)), aes(x = x)) +
+        stat_function(fun = dt, args = list(1),
+                      colour = red_pink, size=2) +
+        stat_function(fun = dt, args = list(2),
+                      colour = turquoise, size=2) +
+        stat_function(fun = dt, args = list(24),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(-4, 4, 1)) +
+          scale_y_continuous(breaks = seq(0, 1.5, 0.1),
+                              limits=c(0, 0.5)) + ylim(0,.5)
+p9 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**PDF**]
+
+]
+
+
+
+.pull-right[
+
+```{R, cdf2, echo = F, fig.fullwidth = T, dev = "svg"}
+p9 <- ggplot(data.frame(x = c(-4, 4)), aes(x = x)) +
+        stat_function(fun = pt, args = list(1),
+                      colour = red_pink, size=2) +
+        stat_function(fun = pt, args = list(2),
+                      colour = turquoise, size=2) +
+        stat_function(fun = pt, args = list(24),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(-4, 4, 1)) +
+          scale_y_continuous(breaks = seq(0, 1.5, 0.1),
+                              limits=c(0, 0.5)) + ylim(0,1)
+p9 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**CDF**]
+
+
+]
+
+---
+# F тархалт 
+
+$X_1 \sim \chi^2(k_1)$, $X_2\sim\chi^2(k_2)$
+
+$$F=\frac{X_1/k1}{X_2/k_2}\sim F(k_1, k_2)$$
+
+$\color{#e64173}{F(2,8)}$, $\color{#20B2AA}{F(6,8)}$, $\color{#2b59c3}{F(6,20)}$, 
+.pull-left[
+
+```{R, pdf4, echo = F, fig.fullwidth = T, dev = "svg"}
+
+# Generate data for density's polygon
+p9 <- ggplot(data.frame(x = c(0, 8)), aes(x = x)) +
+        stat_function(fun = df, args = list(2,8),
+                      colour = red_pink, size=2) +
+        stat_function(fun = df, args = list(6,8),
+                      colour = turquoise, size=2) +
+        stat_function(fun = df, args = list(6,20),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(0, 8, 1)) +
+          scale_y_continuous(breaks = seq(0, 1, 0.1),
+                              limits=c(0, 0.5)) + ylim(0,1)
+p9 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**PDF**]
+
+]
+
+
+
+.pull-right[
+
+```{R, cdf4, echo = F, fig.fullwidth = T, dev = "svg"}
+p9 <- ggplot(data.frame(x = c(0, 8)), aes(x = x)) +
+        stat_function(fun = pf, args = list(2,8),
+                      colour = red_pink, size=2) +
+        stat_function(fun = pf, args = list(6,8),
+                      colour = turquoise, size=2) +
+        stat_function(fun = pf, args = list(6,20),
+                      colour = blue, size=2) +
+        scale_x_continuous(breaks = seq(0, 8, 1)) +
+          scale_y_continuous(breaks = seq(0, 1, 0.1),
+                              limits=c(0, 0.5)) + ylim(0,1)
+p9 + theme_ipsum() + ylab("f(x)")
+```
+
+.center[**CDF**]
+
+
+]
