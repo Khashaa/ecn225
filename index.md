@@ -11,6 +11,13 @@ description:
 
  - Wooldridge "Appendix B"
  - R программчилал
+ - Дасгал, Бодлогууд
+
+[Лекц 3: Статистикийн мэдлэгээ бататгах](pages/slides2-statistics.html)
+
+ - Wooldridge "Appendix C"
+ - R программчилал
+ - Дасгал, Бодлогууд
 
 # Сурах бичиг
 
@@ -18,4 +25,4 @@ description:
 
 ## R Sources
 
-[Florian Heiss *"Using R for Introductory Econometrics"*](http://www.urfie.net/)
+[Florian Heiss *"Using R for Introductory Econometrics"*](http://www.urfie.net/read.html)
