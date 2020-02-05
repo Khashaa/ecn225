@@ -1,0 +1,444 @@
+---
+title: "Лекц 3: Статистик"
+subtitle: "Эконометрикс I<html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+author: "багш: Д. Хашбаатар"
+date: "2020/01/28"
+# date: "08 January 2019"
+output:
+  xaringan::moon_reader:
+    css: ['default', 'metropolis', 'metropolis-fonts', 'my-css.css']
+    # self_contained: true
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+---
+class: inverse, middle
+
+```{r Setup, include = F}
+options(htmltools.dir.version = FALSE)
+library(pacman)
+p_load(broom, latex2exp, ggplot2, ggthemes, viridis, dplyr, hrbrthemes, magrittr, knitr, parallel)
+# Define pink color
+red_pink <- "#e64173"
+# Notes directory
+dir_slides <- "~/Dropbox/UO/Teaching/EC421W19/LectureNotes/02Review/"
+# Knitr options
+opts_chunk$set(
+  comment = "#>",
+  fig.align = "center",
+  fig.height = 7,
+  fig.width = 10.5,
+  # dpi = 300,
+  warning = F,
+  message = F
+)
+# A blank theme for ggplot
+theme_empty <- theme_bw() + theme(
+  line = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+theme_simple <- theme_bw() + theme(
+  line = element_blank(),
+  panel.grid = element_blank(),
+  rect = element_blank(),
+  strip.text = element_blank(),
+  axis.text.x = element_text(size = 14),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  plot.title = element_blank(),
+  axis.title = element_blank(),
+  # plot.margin = structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit"),
+  legend.position = "none"
+)
+```
+```{R, colors, include = F}
+# Define pink color
+red_pink <- "#e64173"
+turquoise <- "#20B2AA"
+orange <- "#FFA500"
+red <- "#fb6107"
+blue <- "#2b59c3"
+green <- "#8bb174"
+grey_light <- "grey70"
+grey_mid <- "grey50"
+grey_dark <- "grey20"
+purple <- "#6A5ACD"
+```
+layout: false
+class: inverse, middle
+
+# Статистик
+## Эх олонлог, Параметр, Санамсаргүй түүвэрлэлт
+
+---
+# Эх олонлог, Түүвэр
+
+.hi-pink[Статистик дүгнэлт (Statistical inference)]: боломжит .hi-turquoise[түүвэр]т тулгуурлан .hi-purple[эх олонлог]ын талаар .hi-turquoise[суралцах (learning)] процесс юм.
+
+--
+
+ - .hi-purple[эх олонлог (population)]: сайтар тодорхойлогдсон бүлэг субъект. *Нийт* хүн ам, *нийт* өрх, *нийт* оюутан, *нийт* ажиллах хүч   
+   - Эх олонлогын шинж чанарыг тодорхойлох параметр
+ 
+ - .hi-turquoise[түүвэр]: Ихэнхдээ эх олонлогыг бүтнээр нь ажиглах боломжгүй байдаг. Эх олонлогын хэсэгчилсэн ажиглалтууд (дэд олонлог)
+
+ - .hi-turquoise[learning]: Эх олонлогын шинж чанарыг тодорхойлох параметрийн талаар
+   - .slate[үнэлгээ хийх] (estimation), 
+   - .slate[таамаглал шалгах] (hypothesis testing)
+
+
+---
+# Эх олонлог, Түүвэр
+
+Эх олонлогийн тархалтыг .hi[статистикийн загвар]аар тодорхойлон, шинж чанарыг таамаглана.
+
+--
+
+```{R, gen dataset, include = F, cache = T}
+# Set population and sample sizes
+n_p <- 100
+n_s <- 30
+# Set the seed
+set.seed(12468)
+# Generate data
+pop_df <- tibble(
+y = rnorm(n_p, mean = 160, sd = 30),
+  row = 1:n_p)
+
+```
+
+.pull-left[
+
+```{R, pop1, echo = F, fig.fullwidth = T, dev = "svg"}
+ggplot(data = pop_df, aes(x = row, y = y)) +
+geom_point(color = "darkslategrey", size = 10) + 
+geom_hline(yintercept=mean(pop_df$y),color = red_pink, size=2)+
+theme_empty
+```
+
+.center[**Эх олонлог**]
+
+]
+
+
+.pull-right[
+
+ - Эх олонлогийн .hi[статистик загвар]
+ - $Y\sim f(Y; \theta)$
+ - Эх олонлогыг төлөөлөх $Y$ хувьсагчийн тархалтын функц $f(Y; \theta)$
+ - $\theta$  параметр
+]
+
+---
+# Эх олонлог, Түүвэр
+
+.pull-left[
+
+```{R, pop2, echo = F, fig.fullwidth = T, dev = "svg"}
+ggplot(data = pop_df, aes(x = row, y = y)) +
+geom_point(color = "darkslategrey", size = 10) + 
+geom_hline(yintercept=mean(pop_df$y),color = red_pink, size=2)+
+theme_empty
+```
+
+.center[**Эх олонлог**]
+
+ - $Y\sim f(Y; \theta)$
+
+]
+
+
+.pull-right[
+
+```{R, sample2, echo = F, fig.fullwidth = T, dev = "svg"}
+pop_df$s1 <- sample(c(TRUE, FALSE), n_p, replace = TRUE, prob = c(n_s, n_p))
+ggplot(data = pop_df, aes(x = row, y = y, shape = s1)) +
+geom_point(color = "darkslategrey", size = 10) +
+scale_shape_manual(values = c(1, 19)) +
+  #geom_hline(yintercept=mean(pop_df$y[pop_df$s1]),color = red_pink, size=2, linetype="dashed")+
+theme_empty
+```
+
+.center[**Түүвэрлэлт**]
+
+- $\{Y_1, Y_2,\ldots,Y_n\}\sim \text{i.i.d } f(y;\theta)$ 
+- санамсаргүй түүвэрлэлт
+- $n$ - түүврийн хэмжээ (sample size)
+]
+
+---
+# Эх олонлог, Түүвэр, Үнэлгээ
+
+.pull-left[
+
+```{R, pop3, echo = F, fig.fullwidth = T, dev = "svg"}
+ggplot(data = pop_df, aes(x = row, y = y)) +
+geom_point(color = "darkslategrey", size = 10) + 
+geom_hline(yintercept=mean(pop_df$y),color = red_pink, size=2)+
+theme_empty
+```
+
+.center[**Эх олонлог**]
+
+ - $f(Y;\theta_0)$
+ -  параметрийн жинхэнэ утга $\theta_0$
+]
+
+
+.pull-right[
+
+```{R, sample3, echo = F, fig.fullwidth = T, dev = "svg"}
+ggplot(data = pop_df, aes(x = row, y = y, shape = s1)) +
+geom_point(color = "darkslategrey", size = 10) +
+scale_shape_manual(values = c(1, 19)) +
+  geom_hline(yintercept=mean(pop_df$y[pop_df$s1]),color = red_pink, size=2, linetype="dashed")+
+theme_empty
+```
+
+.center[**Түүвэрлэлт**]
+
+ - $\{Y_1, Y_2,\ldots,Y_n\}$-ийг ашиглан $\theta_0$ параметрийн үнэлэгч $\hat\theta$ -г тооцно
+ - $\hat\theta=\delta(Y_1,\ldots ,Y_n)$: Параметрийн үнэлэгч нь түүврээс хамаарсан функц байна.
+]
+
+---
+# Эх олонлог, Түүвэр, Үнэлгээ
+
+.pull-left[
+
+```{R, echo = F, fig.fullwidth = T, dev = "svg"}
+ggplot(data = pop_df, aes(x = row, y = y)) +
+geom_point(color = "darkslategrey", size = 10) + 
+geom_hline(yintercept=mean(pop_df$y),color = red_pink, size=2)+
+theme_empty
+```
+
+.center[**Эх олонлог**]
+
+ - $\theta_0$
+]
+
+
+.pull-right[
+
+```{R, echo = F, fig.fullwidth = T, dev = "svg"}
+pop_df$s <- pop_df$y>170
+ggplot(data = pop_df, aes(x = row, y = y, shape = s)) +
+geom_point(color = "darkslategrey", size = 10) +
+scale_shape_manual(values = c(1, 19)) +
+  geom_hline(yintercept=mean(pop_df$y[pop_df$s]),color = red_pink, size=2, linetype="dashed")+
+theme_empty
+```
+
+.center[**Түүвэр**]
+
+ - Санамсаргүй түүвэр биш бол параметрийн үнэлэгч нь жинхэнэ утгаасаа гажуудалтай.
+]
+
+---
+layout: false
+class: inverse, middle
+
+# Статистик
+## Үнэлэгчийн жижиг түүвэр дэх тархалт
+
+---
+# Үнэлэгч, үнэлгээ
+
+ - .hi-purple[Үнэлэгч(estimator)] $W=W(Y_1,...,Y_n)$ нь санамсаргүй хувьсагч 
+ - $W$-ийн ажиглагдах утгыг .hi-purple[үнэлгээ(estimate)] гэдэг
+ - $W$ санамсаргүй хувьсагч учир өөрийн тархалттай байна.
+ 
+--
+
+.pink[Жишээ:] Дундаж нь $\mu$, вариац нь $\sigma^2$ байх эх олонлогоос $\{Y_1,...,Y_n\}$түүвэр авбал $\mu$-ийн үнэлэгч $$\hat\mu=\bar{Y}=\frac{\sum_{i=1}^nY_i}{n}$$
+байна.
+
+--
+
+Үнэлэгч $W$-ийн тархалтыг .hi-pink[түүвэрлэлтийн тархалт (sampling distribution)] гэж нэрлэдэг.
+Үнэлэгч ямар шинж чанартай болох нь түүвэрлэлтийн тархалтаас хамаарна.
+
+---
+# Түүвэрлэлтийн тархалт
+
+```{R, echo = F, fig.fullwidth = T, dev = "svg"}
+pop_df$s1 <- sample(c(TRUE, FALSE), n_p, replace = TRUE, prob = c(n_s, n_p))
+m <- mean(pop_df$y)
+m1 <- mean(pop_df$y[pop_df$s1])
+ggplot(data = pop_df, aes(x = row, y = y, shape = s1)) +
+geom_point(color = "darkslategrey", size = 5) +
+scale_shape_manual(values = c(1, 19)) +
+  geom_hline(yintercept=m,color = red_pink, size=2, alpha=0.5)+
+  geom_hline(yintercept=m1,color = "darkslategrey", size=1, linetype="dashed")+
+theme_empty
+```
+---
+# Түүвэрлэлтийн тархалт
+
+```{R, echo = F, fig.fullwidth = T, dev = "svg"}
+pop_df$s1 <- sample(c(TRUE, FALSE), n_p, replace = TRUE, prob = c(n_s, n_p))
+m2 <- mean(pop_df$y[pop_df$s1])
+ggplot(data = pop_df, aes(x = row, y = y, shape = s1)) +
+geom_point(color = "darkslategrey", size = 5) +
+scale_shape_manual(values = c(1, 19)) +
+  geom_hline(yintercept=m,color = red_pink, size=2, alpha=0.5)+
+  geom_hline(yintercept=m1, color = "darkslategrey", size=1, linetype="dashed", alpha=0.5)+
+  geom_hline(yintercept=mean(pop_df$y[pop_df$s1]),color = "darkslategrey", size=1, linetype="dashed")+
+theme_empty
+```
+
+---
+# Түүвэрлэлтийн тархалт
+
+```{R, echo = F, fig.fullwidth = T, dev = "svg"}
+pop_df$s1 <- sample(c(TRUE, FALSE), n_p, replace = TRUE, prob = c(n_s, n_p))
+m3 <- mean(pop_df$y[pop_df$s1])
+ggplot(data = pop_df, aes(x = row, y = y, shape = s1)) +
+geom_point(color = "darkslategrey", size = 5) +
+scale_shape_manual(values = c(1, 19)) +
+  geom_hline(yintercept=m,color = red_pink, size=2, alpha=0.5)+
+  geom_hline(yintercept=m1, color = "darkslategrey", size=1, linetype="dashed", alpha=0.5)+
+  geom_hline(yintercept=m2, color = "darkslategrey", size=1, linetype="dashed", alpha=0.5)+
+  geom_hline(yintercept=mean(pop_df$y[pop_df$s1]),color = "darkslategrey", size=1, linetype="dashed")+
+theme_empty
+```
+
+---
+layout: false
+class: clear, middle
+
+Гэх мэтчилэн олон удаа давтвал. (Үүнийг Монте Карло симуляцийн арга гэдэг)
+
+---
+# Түүвэрлэлтийн тархалт
+
+```{R, echo = F, fig.fullwidth = T, dev = "svg"}
+y <- pop_df$y
+a <- lapply(1:1e4, function(i) { mean(y[sample(c(TRUE, FALSE), n_p, replace = TRUE, prob = c(n_s, n_p))])}) %>% do.call(rbind, .) %>% as_tibble()
+ggplot() +
+  geom_hline(data = a, aes(yintercept = V1), alpha = 0.01) +
+  geom_point(data = pop_df, aes(x = row, y = y), color = "darkslategrey", size = 5) +
+  geom_hline(yintercept=m,color = red_pink, size=2)+
+  theme_empty
+```
+
+---
+# Түүвэрлэлтийн тархалт
+
+```{R, echo = F, fig.fullwidth = T, dev = "svg"}
+ggplot(data = a, aes(x = V1, y = ..density..)) +
+  ylab("Frequency") +
+  geom_histogram(color = "white", fill = "black", alpha=0.5) +
+  theme_empty + 
+  geom_vline(xintercept=m, color = red_pink, size=2)
+```
+
+---
+# Түүвэрлэлтийн тархалт
+
+$$\begin{aligned}
+\mathrm{E}(\bar{Y})& =\mathrm{E}\left(\frac{\sum_iY_i}{n}\right)\\
+                                  & = \frac{1}{n}\mathrm{E}\left(\sum_{i=1}^nY_i\right)\\
+                     & =\frac{1}{n}\left(\sum_{i=1}^n\mathrm{E}(Y_i)\right)=\mu
+                     \end{aligned}$$
+
+$$\begin{aligned}
+\mathrm{Var}(\bar{Y})& =\mathrm{Var}\left(\frac{\sum_iY_i}{n}\right)\\
+                                  & = \frac{1}{n^2}\mathrm{Var}\left(\sum_{i=1}^nY_i\right)\\
+                     & =\frac{1}{n^2}\left(\sum_{i=1}^n\mathrm{Var}(Y_i)\right)=\frac{\sigma^2}{n}
+                     \end{aligned}$$
+
+---
+# Үнэлэгчийн чанар
+
+Хир тохиромжтой үнэлэгч эсэхийг 2 гол шалгуураар харьцуулан шинжинэ.
+
+## 1. Bias
+ 
+Аливаа $\theta$ параметрийн хувьд 
+
+$$\mathrm{E}(W)=\theta$$
+бол $W$-г $\theta$-ийн .hi-pink[гажилтгүй үнэлэгч(unbiased estimator)] гэнэ.
+
+ - гажилт (bias)
+ 
+ $$\text{bias}(\hat\theta)=\mathrm{E}(\hat\theta)-\theta$$
+ 
+---
+# Үнэлэгчийн чанар
+
+$W_1$, $W_2$ үнэлэгчийг гажилтаар нь харьцуулна
+```{r, echo=FALSE}
+tmp <- tibble(x = seq(-4, 4, 0.01), y = dnorm(x))
+```
+
+.pull-left[
+
+**Гажилтгүй үнэлэгч:** $\mathop{\mathrm{E}}\left( W_1\right)= \theta$
+
+```{R, unbiased pdf, echo = F, dev = "svg"}
+ggplot(data = tmp, aes(x, y)) +
+geom_polygon(fill = red_pink, alpha = 0.9) +
+geom_hline(yintercept = 0, color = "black") +
+geom_vline(xintercept = 0, size = 1, linetype = "dashed") +
+scale_x_continuous(breaks = 0, labels = TeX("$\\theta$")) +
+theme_simple +
+theme(axis.text.x = element_text(size = 40))
+```
+
+]
+
+
+.pull-right[
+
+**Гажилттай үнэлэгч:** $\mathop{\mathrm{E}}\left( W_2\right) \neq \theta$
+
+```{R, biased pdf, echo = F, dev = "svg"}
+ggplot(data = tmp, aes(x, y)) +
+geom_polygon(aes(x = x + 2), fill = "darkslategray", alpha = 0.9) +
+geom_hline(yintercept = 0, color = "black") +
+geom_vline(xintercept = 0, size = 1, linetype = "dashed") +
+scale_x_continuous(breaks = 0, labels = TeX("$\\theta$")) +
+theme_simple +
+theme(axis.text.x = element_text(size = 40))
+```
+
+]
+
+---
+# Үнэлэгчийн чанар
+
+## 2. Вариац
+$$\color{#e64173}{W_1}\text{ v.s }\color{#2f4f4f}{W_2}$$
+
+```{R, variance pdf, echo = F, dev = "svg", fig.height = 5}
+d4 <- tibble(x = seq(-7.5, 7.5, 0.01), y = dnorm(x, mean = 0, sd = 1)) %>%
+  rbind(., tibble(x = seq(7.5, -7.5, -0.01), y = 0))
+d5 <- tibble(x = seq(-7.5, 7.5, 0.01), y = dnorm(x, mean = 0, sd = 1.5)) %>%
+  rbind(., tibble(x = seq(7.5, -7.5, -0.01), y = 0))
+ggplot() +
+geom_polygon(data = d4, aes(x, y), fill = red_pink, alpha = 0.9) +
+geom_polygon(data = d5, aes(x, y), fill = "darkslategray", alpha = 0.8) +
+geom_hline(yintercept = 0, color = "black") +
+geom_vline(xintercept = 0, size = 1, linetype = "dashed") +
+scale_x_continuous(breaks = 0, labels = TeX("$\\theta$")) +
+theme_simple +
+theme(axis.text.x = element_text(size = 20))
+```
+
+---
+layout: false
+class: inverse, middle
+
+# Статистик
+## Асимптот/их түүвэр дэх тархалт
+ 
