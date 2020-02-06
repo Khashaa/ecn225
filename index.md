@@ -2,7 +2,7 @@
 layout: page
 title: Эконометрик 1
 tagline: Багш Д. Хашбаатар
-description: 
+description: Багш Д. Хашбаатар
 ---
 
 # Лекцүүд
